@@ -134,7 +134,7 @@ def calculate_pawn_possible_moves(i, j, board) -> list:
         move_dir = -1
     # Checking forward movement
     if VALIDS[i + move_dir + 2][j + 2] and board[i + move_dir][j][0] != current_player:
-        moves.append((i - 1, j))
+        moves.append((i + move_dir, j))
     # Checking left-right movement
     if (move_dir == 1 and i >= 5) or (move_dir == -1 and i <= 4):
         if VALIDS[i + 2][j - 1 + 2] and board[i][j - 1][0] != current_player:

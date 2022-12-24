@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {cloneDeep} from "lodash";
+import { cloneDeep } from "lodash";
 import ChessUtil from '../utils/chess';
 import { useState, useEffect } from "react";
 // Global variables
@@ -34,15 +34,15 @@ const Container = styled.div`
 const Gameboard = styled.div`
 	width: 530px;
 	height: 580px;
-	background-image: url(${props=>props.img});
+	background-image: url(${props => props.img});
 	background-position: center;
 	background-size: contain;
 	background-repeat: no-repeat;
 `
 const Chess = styled.img`
 	display: inline-block;
-	width: ${props=>props.size}px;
-	height: ${props=>props.size}px;
+	width: ${props => props.size}px;
+	height: ${props => props.size}px;
 `
 const GameInfo = styled.div`
 	font-size: 1.5rem;
@@ -109,16 +109,16 @@ const Col = styled.div`
 `
 const ChineseChess = () => {
 	const [chessboard, setChessboard] = useState([
-			["br", "bn", "bb", "ba", "bk", "ba", "bb", "bn", "br"],
-			["--", "--", "--", "--", "--", "--", "--", "--", "--"],
-			["--", "bc", "--", "--", "--", "--", "--", "bc", "--"],
-			["bp", "--", "bp", "--", "bp", "--", "bp", "--", "bp"],
-			["--", "--", "--", "--", "--", "--", "--", "--", "--"],
-			["--", "--", "--", "--", "--", "--", "--", "--", "--"],
-			["rp", "--", "rp", "--", "rp", "--", "rp", "--", "rp"],
-			["--", "rc", "--", "--", "--", "--", "--", "rc", "--"],
-			["--", "--", "--", "--", "--", "--", "--", "--", "--"],
-			["rr", "rn", "rb", "ra", "rk", "ra", "rb", "rn", "rr"]
+		["br", "bn", "bb", "ba", "bk", "ba", "bb", "bn", "br"],
+		["--", "--", "--", "--", "--", "--", "--", "--", "--"],
+		["--", "bc", "--", "--", "--", "--", "--", "bc", "--"],
+		["bp", "--", "bp", "--", "bp", "--", "bp", "--", "bp"],
+		["--", "--", "--", "--", "--", "--", "--", "--", "--"],
+		["--", "--", "--", "--", "--", "--", "--", "--", "--"],
+		["rp", "--", "rp", "--", "rp", "--", "rp", "--", "rp"],
+		["--", "rc", "--", "--", "--", "--", "--", "rc", "--"],
+		["--", "--", "--", "--", "--", "--", "--", "--", "--"],
+		["rr", "rn", "rb", "ra", "rk", "ra", "rb", "rn", "rr"]
 	]);
 	const [showConfig, setShowConfig] = useState(false);
 	const [turn, setTurn] = useState("r");
@@ -130,11 +130,26 @@ const ChineseChess = () => {
 	const [reversed, setReversed] = useState(false);
 	const [showValidMoves, setShowValidMoves] = useState(false);
 
-	useEffect(()=>{
+	useEffect(() => {
+		if (turn === "b") {
+			(async () => {
+				const rawResponse = await fetch('http://localhost:5001/best-move', {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ player: turn, board: chessboard }),
+					mode: "cors"
+				});
+				const { best_move } = await rawResponse.json();
+				const [origin, dest] = best_move
+				move(origin[0], origin[1], dest[0], dest[1])
+			})();
+		}
+	}, [turn]);
 
-	}, []);
-
-	const restartGame = ()=>{
+	const restartGame = () => {
 		setTurn("r");
 		setSelected([-1, -1]);
 		setIsStalemate(false);
@@ -155,7 +170,7 @@ const ChineseChess = () => {
 		]);
 	}
 
-	const undo = ()=>{
+	const undo = () => {
 
 	}
 	const move = (o_i, o_j, i, j) => {
@@ -169,66 +184,65 @@ const ChineseChess = () => {
 	}
 	const reverse = (isReversed) => {
 		setSelected([-1, -1]);
-		setChessboard(cb => cloneDeep(cb).map(r=>r.reverse()).reverse());
+		setChessboard(cb => cloneDeep(cb).map(r => r.reverse()).reverse());
 		setValidMoves([]);
 	}
 	return (
-		<Container id="game_area" onClick={()=>{
-				setSelected([-1, -1]);
-			}}>
+		<Container id="game_area" onClick={() => {
+			setSelected([-1, -1]);
+		}}>
 			<Gameboard img={`${process.env.PUBLIC_URL}/img/s/${chessboardImg}`}>
 				{
 					chessboard.map((row, i) =>
-						(<>
-							{
-								row.map((chess, j) => <Chess
-									key={`chess-${i}-${j}`}
-									src={
-										`${process.env.PUBLIC_URL}/img/s/${chessImgType}/${CHESS_MAP[chess]}${
-											(i == selected[0] && j == selected[1]) ||
-											(showValidMoves && validMoves.find(m => m[0] == i && m[1] == j))? "S" : ""}.GIF`
-									}
-									size={CHESS_SIZE}
-									onClick={(e)=>{
-										e.stopPropagation();
-										// Check if a move
-										if(selected[0] !== -1 && selected[1] !== -1 && chessboard[selected[0]][selected[1]][0] === turn){
-											for(let m of validMoves){
-												if(i == m[0] && j == m[1]){
-													// Move
-													move(selected[0], selected[1], i, j);
-													return;
-												}
+					(<>
+						{
+							row.map((chess, j) => <Chess
+								key={`chess-${i}-${j}`}
+								src={
+									`${process.env.PUBLIC_URL}/img/s/${chessImgType}/${CHESS_MAP[chess]}${(i == selected[0] && j == selected[1]) ||
+										(showValidMoves && validMoves.find(m => m[0] == i && m[1] == j)) ? "S" : ""}.GIF`
+								}
+								size={CHESS_SIZE}
+								onClick={(e) => {
+									e.stopPropagation();
+									// Check if a move
+									if (selected[0] !== -1 && selected[1] !== -1 && chessboard[selected[0]][selected[1]][0] === turn) {
+										for (let m of validMoves) {
+											if (i == m[0] && j == m[1]) {
+												// Move
+												move(selected[0], selected[1], i, j);
+												return;
 											}
 										}
-										setSelected([i, j])
-										let moves = ChessUtil.get_valid_moves(i, j, turn, chessboard);
-										setValidMoves(moves);
-									}}/>)
-							}
-						</>)
+									}
+									setSelected([i, j])
+									let moves = ChessUtil.get_valid_moves(i, j, turn, chessboard);
+									setValidMoves(moves);
+								}} />)
+						}
+					</>)
 					)
 				}
 			</Gameboard>
 			<GameInfo>
 				<GameLogo src={`${process.env.PUBLIC_URL}/img/chess_logo.png`} alt="Chinese Chess" />
 				<p className="checkmate"></p>
-				<p>Player's turn: <span style={{fontSize: "1.5rem", color: turn === "r" ? "red" : "black"}}>{turn === "r" ? "RED" : "BLACK"}</span></p>
+				<p>Player's turn: <span style={{ fontSize: "1.5rem", color: turn === "r" ? "red" : "black" }}>{turn === "r" ? "RED" : "BLACK"}</span></p>
 				<Button onclick={() => restartGame()}>New Game</Button>
 				<Button onclick={() => undo()}>Undo</Button>
 				<Button onClick={() => setShowConfig(true)}>Settings</Button>
 			</GameInfo>
-			<ModalContainer hidden={!showConfig} onClick={()=>setShowConfig(false)}>
-				<Modal onClick={e=>e.stopPropagation()}>
+			<ModalContainer hidden={!showConfig} onClick={() => setShowConfig(false)}>
+				<Modal onClick={e => e.stopPropagation()}>
 					<ModalHeader>
 						Settings
-						<span onClick={()=>setShowConfig(false)}>&times;</span>
+						<span onClick={() => setShowConfig(false)}>&times;</span>
 					</ModalHeader>
 					<ModalBody>
 						<Row>
 							<Col>Chessboard Type</Col>
 							<Col>
-								<select value={chessboardImg} onChange={e=>setChessboardImg(e.target.value)}>
+								<select value={chessboardImg} onChange={e => setChessboardImg(e.target.value)}>
 									{
 										BOARD_TYPES.map(b => <option value={b}>{b.split(".")[0].toLowerCase()}</option>)
 									}
@@ -238,7 +252,7 @@ const ChineseChess = () => {
 						<Row>
 							<Col>Chess Type</Col>
 							<Col>
-								<select value={chessImgType} onChange={e=>setChessImgType(e.target.value)}>
+								<select value={chessImgType} onChange={e => setChessImgType(e.target.value)}>
 									{
 										CHESS_TYPES.map(c => <option value={c}>{c.toLowerCase()}</option>)
 									}
@@ -247,16 +261,16 @@ const ChineseChess = () => {
 						</Row>
 						<Row>
 							<Col>Show valid moves?</Col>
-							<Col><input type="checkbox" defaultChecked={showValidMoves} onChange={e=>setShowValidMoves(e.target.checked)}/></Col>
+							<Col><input type="checkbox" defaultChecked={showValidMoves} onChange={e => setShowValidMoves(e.target.checked)} /></Col>
 						</Row>
 						<Row>
 							<Col>Reverse black chess?</Col>
-							<Col><input type="checkbox" defaultChecked={reversed} onChange={e=>setReversed(e.target.checked)}/></Col>
+							<Col><input type="checkbox" defaultChecked={reversed} onChange={e => setReversed(e.target.checked)} /></Col>
 						</Row>
 					</ModalBody>
-			</Modal>
-		</ModalContainer>
-	</Container>)
+				</Modal>
+			</ModalContainer>
+		</Container>)
 }
 
 export default ChineseChess;
