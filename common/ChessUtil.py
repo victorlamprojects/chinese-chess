@@ -1,7 +1,10 @@
 import math
 from copy import deepcopy
 import concurrent.futures
-from GlobalConfig import chess_types
+from common.GlobalConfig import chess_types
+from common.Util import load_model
+import torch
+
 
 # King and Advisor can go to 3 only
 # Bishop can go to >= 2
@@ -215,13 +218,18 @@ def get_valid_moves_map(current_player, board):
     return valid_moves_map
 
 
-def calculate_score(board, current_player):
-    return 0.5
+def calculate_score(current_player, board):
+    model = load_model(f"best_cnn_model")
+    model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    model.eval()
+    return model(torch.Tensor([encode_gameboard(current_player, board)]))
 
 
 def calculate_score_for_x_y(i, j, x, y, current_player, board):
     board[x][y], board[i][j] = board[i][j], "--"
-    return calculate_score(board, current_player)
+    score = calculate_score(current_player, board)
+    # print(f"origin: {i} {j}, dest: {x}, {y}, score: {score}")
+    return score
 
 
 def get_best_move_and_score_for_i_j(i, j, valid_moves, current_player, board):

@@ -6,9 +6,7 @@ spacy
 spacy_langdetect
 nltk
 numpy
-sklearn
-keras
-tensorflow
+scikit-learn
 matplotlib
 bayesian-optimization
 torch
